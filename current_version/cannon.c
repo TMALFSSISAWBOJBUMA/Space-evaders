@@ -10,7 +10,7 @@ int main(){
 
   gfx_initFonts();
 
-  gfx_fontScale(2);
+  gfx_fontScale(3);
 
   int refresh_rate = 90;
   //enum level game_state() = ENTRY;
