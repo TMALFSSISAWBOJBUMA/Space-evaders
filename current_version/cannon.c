@@ -82,25 +82,21 @@ int main(){
 
   while (game_state() != ENDGAME) {
     if (SDL_GetTicks() - time > (1000 / refresh_rate)){
-      printf("start after:\t\t%lldms\n",SDL_GetTicks() - time);
+      printf("start after: %lldms\n",SDL_GetTicks() - time);
       time = SDL_GetTicks();
 
       if(game_state() != PAUSED_U){
         draw_background();
-        printf("%lld:",SDL_GetTicks() - time);
         if (active_missiles){
           for(int o = 0; o < missiles; o++){
             draw_missile( &(r[o]) );
           }
         }
-        printf("%lld:",SDL_GetTicks() - time);
         draw_ship(ship);
         draw_lifes(ship->life);
-        printf("%lld:",SDL_GetTicks() - time);
         for(int n = 0; n < targets; n++){
           draw_UFO(&(t[n]));
         }
-        printf("%lld:",SDL_GetTicks() - time);
 
         if(game_state() == PAUSED){
           set_game_state(PAUSED_U);
@@ -110,10 +106,8 @@ int main(){
         }
 
         out_text();
-        printf("(t)%lld:",SDL_GetTicks() - time);
 
         gfx_updateScreen();
-        printf("%lld\n",SDL_GetTicks() - time);
 
       }
 
@@ -167,7 +161,7 @@ int main(){
               ship->life--;
               if(!ship->life){
                 set_game_state(DEAD);
-                ship->life = -200;
+                ship->life = -60;
               }
             }
             if(!(t[n].ball.active)){

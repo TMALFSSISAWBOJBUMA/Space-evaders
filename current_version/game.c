@@ -5,7 +5,7 @@
 #define UFO_WIDTH     30
 #define UFO_HEIGHT    20
 #define BUFF_SIZE     20
-#define EXP           200
+#define EXP           60
 
 
 void dummy(){}    //do nothing
@@ -87,8 +87,8 @@ void draw_UFO(struct target* t){
 
 void draw_ship(struct s_ship* ship){
   int scale = 2;
-  //if(game_enum == DEAD && !ship->life)
-  //  scale = (-(ship->life) % 6 + 1) * 0.5;
+  if(game_enum == DEAD && ship->life <= 0)
+    scale = (-(ship->life) % 6) * 0.5;
 
   gfx_filledRect(ship->x - 6 * scale, ship->y - 25 * scale, ship->x + 6 * scale, ship->y, WHITE);
   gfx_filledTriangle(ship->x - 6 * scale, ship->y, ship->x + 6 * scale, ship->y, ship->x, ship->y + 7 * scale, ORANGE);
