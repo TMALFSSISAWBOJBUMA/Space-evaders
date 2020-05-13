@@ -1,5 +1,5 @@
 enum dir { R_UP = 1, R_DOWN, L_DOWN, L_UP, OFF};      //target's state
-enum level {ENTRY, GAME, PAUSED, PAUSED_U, DEAD, ENDGAME};    //stages of the game
+enum level {ENTRY, GAME, DEAD, PAUSED, PAUSED_U, ENDGAME};    //stages of the game
 enum to_do {NTHG, MOV_L, MOV_R, SHOOT = 4};     //keyboard_actions() output
 
 struct bullet{
@@ -27,9 +27,9 @@ struct rocket{
 };
 
 struct s_ship{
-  unsigned int x     :12;
-  unsigned int y     :12;
-           int life  :6;
+  unsigned int x      :12;
+  unsigned int y      :12;
+           int life   :10;
 };
 
 

@@ -5,6 +5,7 @@
 #define UFO_WIDTH     30
 #define UFO_HEIGHT    20
 #define BUFF_SIZE     20
+#define EXP           200
 
 
 void dummy(){}    //do nothing
@@ -28,8 +29,7 @@ double deg_to_rad(double deg){
 
 void draw_background(){
   gfx_filledRect(0, 0, gfx_screenWidth() - 1, gfx_screenHeight() - 1, BLACK);
-  if(game_enum < DEAD)
-    gfx_line(0, y_boundry(), gfx_screenWidth(), y_boundry(), WHITE);
+  gfx_line(0, y_boundry(), gfx_screenWidth(), y_boundry(), WHITE);
 }
 
 /*
@@ -62,7 +62,7 @@ int ufo_y(){
 }
 
 void draw_UFO(struct target* t){
-  if(game_enum != DEAD){
+  //if(game_enum != DEAD){
     if(t->state <= 0){
       gfx_filledCircle(t->x, t->y, ((t->state * -1) % 5) * 15 , YELLOW);
     }
@@ -82,22 +82,23 @@ void draw_UFO(struct target* t){
         gfx_line(t->x - nx, t->y, t->x + nx,t->y, RED);
       }
     }
-  }
+  //}
 }
 
 void draw_ship(struct s_ship* ship){
-  if(game_enum != DEAD){
-    int scale = 2;
-    gfx_filledRect(ship->x - 6 * scale, ship->y - 25 * scale, ship->x + 6 * scale, ship->y, WHITE);
-    gfx_filledTriangle(ship->x - 6 * scale, ship->y, ship->x + 6 * scale, ship->y, ship->x, ship->y + 7 * scale, ORANGE);
-    gfx_filledTriangle(ship->x - 10 * scale, ship->y, ship->x + 10 * scale, ship->y, ship->x, ship->y + 3 * scale, WHITE);
-    gfx_filledTriangle(ship->x - 10 * scale, ship->y, ship->x - 6 * scale, ship->y - 6 * scale, ship->x - 6 * scale, ship->y, WHITE);
-    gfx_filledTriangle(ship->x + 10 * scale, ship->y, ship->x + 6 * scale, ship->y - 6 * scale, ship->x + 6 * scale, ship->y, WHITE);
-    gfx_filledTriangle(ship->x - 31 * scale, ship->y - 31 * scale, ship->x - 6 * scale, ship->y - 20 * scale, ship->x - 6 * scale, ship->y - 6 * scale, WHITE);
-    gfx_filledTriangle(ship->x + 31 * scale, ship->y - 31 * scale, ship->x + 6 * scale, ship->y - 20 * scale, ship->x + 6 * scale, ship->y - 6 * scale, WHITE);
-    gfx_filledTriangle(ship->x - 16 * scale, ship->y - 21 * scale, ship->x, ship->y - 14 * scale, ship->x, ship->y - 5 * scale, GRAY);
-    gfx_filledTriangle(ship->x + 16 * scale, ship->y - 21 * scale, ship->x, ship->y - 14 * scale, ship->x, ship->y - 5 * scale, GRAY);
-  }
+  int scale = 2;
+  //if(game_enum == DEAD && !ship->life)
+  //  scale = (-(ship->life) % 6 + 1) * 0.5;
+
+  gfx_filledRect(ship->x - 6 * scale, ship->y - 25 * scale, ship->x + 6 * scale, ship->y, WHITE);
+  gfx_filledTriangle(ship->x - 6 * scale, ship->y, ship->x + 6 * scale, ship->y, ship->x, ship->y + 7 * scale, ORANGE);
+  gfx_filledTriangle(ship->x - 10 * scale, ship->y, ship->x + 10 * scale, ship->y, ship->x, ship->y + 3 * scale, WHITE);
+  gfx_filledTriangle(ship->x - 10 * scale, ship->y, ship->x - 6 * scale, ship->y - 6 * scale, ship->x - 6 * scale, ship->y, WHITE);
+  gfx_filledTriangle(ship->x + 10 * scale, ship->y, ship->x + 6 * scale, ship->y - 6 * scale, ship->x + 6 * scale, ship->y, WHITE);
+  gfx_filledTriangle(ship->x - 31 * scale, ship->y - 31 * scale, ship->x - 6 * scale, ship->y - 20 * scale, ship->x - 6 * scale, ship->y - 6 * scale, WHITE);
+  gfx_filledTriangle(ship->x + 31 * scale, ship->y - 31 * scale, ship->x + 6 * scale, ship->y - 20 * scale, ship->x + 6 * scale, ship->y - 6 * scale, WHITE);
+  gfx_filledTriangle(ship->x - 16 * scale, ship->y - 21 * scale, ship->x, ship->y - 14 * scale, ship->x, ship->y - 5 * scale, GRAY);
+  gfx_filledTriangle(ship->x + 16 * scale, ship->y - 21 * scale, ship->x, ship->y - 14 * scale, ship->x, ship->y - 5 * scale, GRAY);
 }
 
 void draw_missile(struct rocket* r){
@@ -152,13 +153,15 @@ void out_text(){
       break;
 
     case DEAD:
+      dummy();
+      int tr = 255 * (1 + mothership.life / EXP);
       sprintf(text,"Your score was: %d point%c", user_score, *((user_score==1)?"":"s"));
       gfx_fontScale(3);
-      text_centre("YOU HAVE LOST", -200, RED, 255);
+      text_centre("YOU HAVE LOST", -200, RED, tr);
       gfx_fontScale(2);
-      text_centre(text, 0, RED, 255);
-      text_centre("Press ENTER to start a new game", 80, RED, 255);
-      text_centre("Press ESCAPE to exit", 120, RED, 255);
+      text_centre(text, 0, RED, tr);
+      text_centre("Press ENTER to start a new game", 80, RED, tr);
+      text_centre("Press ESCAPE to exit", 120, RED, tr);
       break;
 
     case ENDGAME:

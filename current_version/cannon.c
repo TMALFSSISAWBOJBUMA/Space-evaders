@@ -77,27 +77,30 @@ int main(){
     assert(t[n].angle > 0);
     assert(t[n].speed > 0);
   }
+  t[0].ball.active = 10;
   unsigned long long time;
 
   while (game_state() != ENDGAME) {
     if (SDL_GetTicks() - time > (1000 / refresh_rate)){
+      printf("start after:\t\t%lldms\n",SDL_GetTicks() - time);
       time = SDL_GetTicks();
 
       if(game_state() != PAUSED_U){
         draw_background();
-
+        printf("%lld:",SDL_GetTicks() - time);
         if (active_missiles){
           for(int o = 0; o < missiles; o++){
             draw_missile( &(r[o]) );
           }
         }
-
+        printf("%lld:",SDL_GetTicks() - time);
         draw_ship(ship);
         draw_lifes(ship->life);
-
+        printf("%lld:",SDL_GetTicks() - time);
         for(int n = 0; n < targets; n++){
           draw_UFO(&(t[n]));
         }
+        printf("%lld:",SDL_GetTicks() - time);
 
         if(game_state() == PAUSED){
           set_game_state(PAUSED_U);
@@ -107,8 +110,10 @@ int main(){
         }
 
         out_text();
+        printf("(t)%lld:",SDL_GetTicks() - time);
 
         gfx_updateScreen();
+        printf("%lld\n",SDL_GetTicks() - time);
 
       }
 
@@ -157,26 +162,33 @@ int main(){
             //printf("%d,%f\n", n, tan);
           }
           else if( !(t[n].ball.active) ){
-            t[n].ball.x += bullet_speed * sin(t[n].ball.angle);
-            if(t[n].ball.x < 0 || t[n].ball.x > gfx_screenWidth()){
+            if(hypot(t[n].ball.x -ship->x, t[n].ball.y - ship->y) < 40){
               t[n].ball.active = random_value(400,1000);
-            }
-            else{
-              t[n].ball.y += bullet_speed * cos(t[n].ball.angle);
-              if(t[n].ball.y > gfx_screenHeight()){
-                t[n].ball.active = random_value(400,1000);
+              ship->life--;
+              if(!ship->life){
+                set_game_state(DEAD);
+                ship->life = -200;
               }
             }
             if(!(t[n].ball.active)){
-              if(hypot(t[n].ball.x -ship->x, t[n].ball.y - ship->y) < 30){
+              t[n].ball.x += bullet_speed * sin(t[n].ball.angle);
+              if(t[n].ball.x < 0 || t[n].ball.x > gfx_screenWidth()){
                 t[n].ball.active = random_value(400,1000);
-                ship->life--;
-                if(!ship->life)
-                  set_game_state(DEAD);
+              }
+              else{
+                t[n].ball.y += bullet_speed * cos(t[n].ball.angle);
+                if(t[n].ball.y > gfx_screenHeight()){
+                  t[n].ball.active = random_value(400,1000);
+                }
               }
             }
           }
         }
+      }
+
+      if(game_state() == DEAD){
+        if(ship->life < 0)
+          ship->life ++;
       }
 
       char act = keyboard_actions();
