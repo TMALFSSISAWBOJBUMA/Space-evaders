@@ -13,7 +13,6 @@ int main(){
   gfx_fontScale(3);
 
   int refresh_rate = 90;
-  //enum level game_state() = ENTRY;
 
   const int targets = 4;
   struct target t[targets];
@@ -60,12 +59,13 @@ int main(){
 
   int bullet_size = 8;
   double rocket_speed = 1000.0; // pixels per second
+  int next_score = 10;
 
   double bullet_speed = 600.0;
   struct s_ship* ship = m_ship();
   ship->x = gfx_screenWidth() / 2;
   ship->y = gfx_screenHeight() - 80;
-  ship->life = 1;
+  ship->life = 2;
   double cannon_speed = 500.0;
 
   rocket_speed /= refresh_rate;
@@ -77,12 +77,12 @@ int main(){
     assert(t[n].angle > 0);
     assert(t[n].speed > 0);
   }
-  t[0].ball.active = 10;
+  //t[0].ball.active = 10;
   unsigned long long time;
 
   while (game_state() != ENDGAME) {
     if (SDL_GetTicks() - time > (1000 / refresh_rate)){
-      printf("start after: %lldms\n",SDL_GetTicks() - time);
+      printf("%lldms\n",SDL_GetTicks() - time);
       time = SDL_GetTicks();
 
       if(game_state() != PAUSED_U){
@@ -177,6 +177,12 @@ int main(){
               }
             }
           }
+        }
+
+        if(score() > next_score){
+          next_score *= 2;
+          if(ship->life < 10)  //10 lifes max
+            ship->life += 1;
         }
       }
 

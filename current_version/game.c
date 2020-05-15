@@ -123,7 +123,7 @@ void draw_lifes(int lifes){
 void text_centre(char* text, int y_offset, enum color c, int a){
   int size = strlen(text) - 1;
   int x = gfx_screenWidth() / 2 - 4 * gfx_fontSize() * size;
-  y_offset += gfx_screenHeight() / 2;
+  y_offset += (gfx_screenHeight() / 2 + 4 * gfx_fontSize());
   gfx_textoutA(x, y_offset, text, c, a);
 }
 
@@ -134,6 +134,7 @@ void out_text(){
       gfx_fontScale(3);
       text_centre("WELCOME", -200, RED, 255);
       text_centre("Type in your name below", -100, RED, 255);
+      //gfx_rect(gfx_screenWidth() / 2 - 240, gfx_screenHeight() / 2 + 12, gfx_screenWidth() / 2 + 240, gfx_screenHeight() / 2 - 12, WHITE);
       text_centre(input_string(), 0, GREEN, 255);
       text_centre("Press ENTER to START", 50, RED, 255);
       gfx_fontScale(2);
