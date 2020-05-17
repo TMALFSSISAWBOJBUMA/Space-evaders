@@ -62,27 +62,25 @@ int ufo_y(){
 }
 
 void draw_UFO(struct target* t){
-  //if(game_enum != DEAD){
-    if(t->state <= 0){
-      gfx_filledCircle(t->x, t->y, ((t->state * -1) % 5) * 15 , YELLOW);
+  if(t->state > 0){
+    int dx = UFO_WIDTH;
+    int dy = UFO_HEIGHT/2;
+    //gfx_filledEllipse(t->x ,t->y,dy-1,dx-9,GREEN);
+    gfx_filledCircle(t->x, t->y + dy, dy, t->colour);
+    gfx_filledCircle(t->x, t->y - dy, dy, t->colour);
+    gfx_filledEllipse(t->x ,t->y, dx, dy, t->colour + 1);
+    gfx_line(t->x - dx, t->y, t->x + dx, t->y, t->colour);
+    if(t->ball.active > 0){
+      int nx = dx * t->ball.active / 1000;
+      gfx_line(t->x - nx, t->y, t->x + nx,t->y, RED);
     }
-    else{
-      int dx = UFO_WIDTH;
-      int dy = UFO_HEIGHT/2;
-      //gfx_filledEllipse(t->x ,t->y,dy-1,dx-9,GREEN);
-      gfx_filledCircle(t->x, t->y + dy, dy, t->colour);
-      gfx_filledCircle(t->x, t->y - dy, dy, t->colour);
-      gfx_filledEllipse(t->x ,t->y, dx, dy, t->colour + 1);
-      gfx_line(t->x - dx, t->y, t->x + dx, t->y, t->colour);
-      if( !(t->ball.active) ){
-        gfx_filledCircle(t->ball.x, t->ball.y, 5, ORANGE);
-      }
-      else{
-        int nx = dx * t->ball.active / 1000;
-        gfx_line(t->x - nx, t->y, t->x + nx,t->y, RED);
-      }
-    }
-  //}
+    else if( !(t->ball.active) )
+      gfx_filledCircle(t->ball.x, t->ball.y, 5, ORANGE);
+    else
+      gfx_filledCircle(t->ball.x, t->ball.y, -(t->ball.active), YELLOW);
+  }
+  else
+    gfx_filledCircle(t->x, t->y, (t->state % 5) * -15 , YELLOW);
 }
 
 void draw_ship(struct s_ship* ship){
@@ -155,7 +153,7 @@ void out_text(){
 
     case DEAD:
       dummy();
-      int tr = 255 * (1 + mothership.life / EXP);
+      int tr = 255 * (1.0 + (double)mothership.life / EXP);
       sprintf(text,"Your score was: %d point%c", user_score, *((user_score==1)?"":"s"));
       gfx_fontScale(3);
       text_centre("YOU HAVE LOST", -200, RED, tr);
@@ -232,9 +230,6 @@ void target_action(struct target* t){
 
     default:
       t->state ++;
-  }
-  if(t->ball.active && game_state() == GAME){
-    t->ball.active--;
   }
 }
 
@@ -341,7 +336,7 @@ char keyboard_actions(){
         case SDLK_RETURN:  //ENTER
           set_game_state(ENTRY);
           mothership.x = gfx_screenWidth() / 2;
-          mothership.life = 10;
+          mothership.life = 5;
           save_score();
           break;
 

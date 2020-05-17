@@ -2,6 +2,12 @@
 #include "game.h"
 #include <stdlib.h>
 #include <assert.h>
+#include <math.h>
+
+void step_to_zero(int* num){
+  if(*num > 0)    --(*num);
+  else            ++(*num);
+}
 
 
 int main(){
@@ -65,7 +71,7 @@ int main(){
   struct s_ship* ship = m_ship();
   ship->x = gfx_screenWidth() / 2;
   ship->y = gfx_screenHeight() - 80;
-  ship->life = 2;
+  ship->life = 5;
   double cannon_speed = 500.0;
 
   rocket_speed /= refresh_rate;
@@ -82,7 +88,7 @@ int main(){
 
   while (game_state() != ENDGAME) {
     if (SDL_GetTicks() - time > (1000 / refresh_rate)){
-      printf("%lldms\n",SDL_GetTicks() - time);
+      // printf("%lldms\n",SDL_GetTicks() - time);
       time = SDL_GetTicks();
 
       if(game_state() != PAUSED_U){
@@ -147,35 +153,54 @@ int main(){
         }
 
         for(int n = 0; n < targets; n++){
-          if(t[n].ball.active == 1){
-            t[n].ball.x = t[n].x;
-            t[n].ball.y = t[n].y;
-            double tan = (ship->x - t[n].x)/(ship->y - t[n].y);
-            t[n].ball.angle = atan(tan);
-            t[n].ball.active--;
-            //printf("%d,%f\n", n, tan);
-          }
-          else if( !(t[n].ball.active) ){
-            if(hypot(t[n].ball.x -ship->x, t[n].ball.y - ship->y) < 40){
-              t[n].ball.active = random_value(400,1000);
-              ship->life--;
-              if(!ship->life){
-                set_game_state(DEAD);
-                ship->life = -60;
-              }
-            }
-            if(!(t[n].ball.active)){
-              t[n].ball.x += bullet_speed * sin(t[n].ball.angle);
-              if(t[n].ball.x < 0 || t[n].ball.x > gfx_screenWidth()){
-                t[n].ball.active = random_value(400,1000);
-              }
-              else{
-                t[n].ball.y += bullet_speed * cos(t[n].ball.angle);
-                if(t[n].ball.y > gfx_screenHeight()){
-                  t[n].ball.active = random_value(400,1000);
+          switch(t[n].ball.active){
+            case 0:
+              if(hypot(t[n].ball.x -ship->x, t[n].ball.y - ship->y) < 40){
+                t[n].ball.active = -10;
+                ship->life--;
+                if(!ship->life){
+                  set_game_state(DEAD);
+                  ship->life = -60;
+                  if(active_missiles > 0){
+                    for(int o = 0; o < missiles; o++){
+                      r[o].active = 0;
+                    }
+                    active_missiles = 0;
+                  }
+                  for(int p = 0; p < targets; p++){
+                    if(t[n].ball.active < 0)  t[n].ball.active = random_value(400,1000);
+                  }
                 }
               }
-            }
+              if(!(t[n].ball.active)){
+                t[n].ball.x += bullet_speed * sin(t[n].ball.angle);
+                if(t[n].ball.x < 0 || t[n].ball.x > gfx_screenWidth()){
+                  t[n].ball.active = random_value(400,1000);
+                }
+                else{
+                  t[n].ball.y += bullet_speed * cos(t[n].ball.angle);
+                  if(t[n].ball.y > gfx_screenHeight()){
+                    t[n].ball.active = random_value(400,1000);
+                  }
+                }
+              }
+              break;
+
+            case 1:
+              t[n].ball.x = t[n].x;
+              t[n].ball.y = t[n].y;
+              double tan = (ship->x - t[n].x)/(ship->y - t[n].y);
+              t[n].ball.angle = atan(tan);
+              t[n].ball.active--;
+              break;
+
+            case -1:
+              t[n].ball.active = random_value(400,1000);
+              break;
+
+            default:
+              step_to_zero(&t[n].ball.active);
+              break;
           }
         }
 
@@ -186,7 +211,7 @@ int main(){
         }
       }
 
-      if(game_state() == DEAD){
+      else if(game_state() == DEAD){
         if(ship->life < 0)
           ship->life ++;
       }
@@ -194,12 +219,12 @@ int main(){
       char act = keyboard_actions();
       if(act != NTHG){
         if(act & MOV_R){
-          if(ship->x < gfx_screenWidth())
+          if(ship->x < gfx_screenWidth() - cannon_speed)
             ship->x += cannon_speed;
         }
 
         if(act & MOV_L){
-          if(ship->x > 0)
+          if(ship->x > cannon_speed)
             ship->x -= cannon_speed;
         }
 

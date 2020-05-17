@@ -6,7 +6,7 @@ struct bullet{
   double x;
   double y;
   double angle;
-  int active; // 0 when active, 0<active<1000 when counting from random number
+  int active; // <0 when exploding,0 when active,0<active<1000 when counting from random number
 };
 
 struct target{
@@ -18,18 +18,19 @@ struct target{
   enum color colour;
   char points;
   struct bullet ball;
+  struct target* next;
 };
 
 struct rocket{
-  int x;
-  int y;
-  int active;
+  int x       :12;
+  int y       :12;
+  int active  :2;
 };
 
 struct s_ship{
-  unsigned int x      :12;
-  unsigned int y      :12;
-           int life   :10;
+  int x      :12;
+  int y      :12;
+  int life   :8;
 };
 
 
