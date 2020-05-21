@@ -103,6 +103,7 @@ int main(){
                     double dy = (ufo_x() + bullet_size - dx) * (ufo_y() + bullet_size) / (ufo_x() + bullet_size);
                     if ((tar->y - r[o].y) <= dy && (tar->y - r[o].y) > 0){
                       tar->state = -10;
+                      *(num_targets()) -= 1;
                       r[o].active = 0;
                       add_to_score(tar->points);
                       active_missiles--;
@@ -192,6 +193,9 @@ int main(){
           if(ship->life < 10)  //10 lifes max
             ship->life += 1;
         }
+
+        if(*num_targets() == 0)
+          next_lvl();
       }
 
       else if(game_state() == DEAD){

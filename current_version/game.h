@@ -39,7 +39,7 @@ struct status{
   unsigned int refresh  :8;
   unsigned int user_score :20;
   unsigned int lvl :8;
-  unsigned int active_targets :10;
+  char active_targets;
 };
 
 void dummy();
@@ -89,9 +89,13 @@ char game_state();
 
 int add_target(int amount);
 
+char* num_targets();
+
 void del_targets();
 
 void set_game_state(enum level k);
+
+void next_lvl();
 
 void set_refresh_rate(int r);
 

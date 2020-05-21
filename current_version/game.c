@@ -10,7 +10,7 @@
 
 void dummy(){}    //do nothing
 
-static struct status gamestat = {ENTRY, 1, 0, 1};
+static struct status gamestat = {ENTRY, 1, 0, 1, 0};
 static char input[BUFF_SIZE];
 static struct s_ship mothership;
 static struct target first;
@@ -73,7 +73,7 @@ void draw_UFO(struct target* t){
       gfx_line(t->x - dx, t->y, t->x + dx, t->y, t->colour);
       if(t->ball.active > 0){
         int nx = dx * t->ball.active / 1000;
-        gfx_line(t->x - nx, t->y, t->x + nx,t->y, RED);
+        gfx_line(t->x - nx, t->y, t->x + nx,t->y, ORANGE);
       }
       else if( !(t->ball.active) )
         gfx_filledCircle(t->ball.x, t->ball.y, 5, ORANGE);
@@ -403,20 +403,29 @@ void init_target(struct target* new){
 }
 
 int add_target(int amount){
+  gamestat.active_targets = 0;
   struct target* f = root();
-  while(f->next != NULL)
+  while(f->next != NULL){
+    gamestat.active_targets++;
+    init_target(f);
     f = f->next;
+  }
   while(amount--){
     f->next = malloc(sizeof(*f));
     if(f->next == NULL)
       return -1;
     else{
+      gamestat.active_targets++;
       f = f->next;
       init_target(f);
     }
   }
   f->next = NULL;
   return amount;
+}
+
+char* num_targets(){
+  return &gamestat.active_targets;
 }
 
 void del_targets(){
@@ -427,6 +436,11 @@ void del_targets(){
 
 void set_game_state(enum level k){
   gamestat.game_enum = k;
+}
+
+void next_lvl(){
+  gamestat.lvl ++;
+  add_target(gamestat.lvl);
 }
 
 void set_refresh_rate(int r){
