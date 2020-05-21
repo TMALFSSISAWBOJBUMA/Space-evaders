@@ -1,5 +1,5 @@
 enum dir {OFF, R_UP, R_DOWN, L_DOWN, L_UP};      //target's state
-enum level {ENTRY, GAME, DEAD, PAUSED, PAUSED_U, ENDGAME};    //stages of the game
+enum level {ENTRY, GAME, DEAD, PAUSED, PAUSED_U, FAIL, ENDGAME};    //stages of the game
 enum to_do {NTHG, MOV_L, MOV_R, SHOOT = 4};     //keyboard_actions() output
 enum alignment {LEFT, CENTRE, RIGHT};
 
@@ -32,6 +32,14 @@ struct s_ship{
   int x      :12;
   int y      :12;
   int life   :8;
+};
+
+struct status{
+  unsigned int game_enum  :4;
+  unsigned int refresh  :8;
+  unsigned int user_score :20;
+  unsigned int lvl :8;
+  unsigned int active_targets :10;
 };
 
 void dummy();
@@ -85,4 +93,8 @@ void del_targets();
 
 void set_game_state(enum level k);
 
+void set_refresh_rate(int r);
+
 struct s_ship* m_ship();
+
+struct target* root();

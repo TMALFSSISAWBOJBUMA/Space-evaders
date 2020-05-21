@@ -10,11 +10,10 @@
 
 void dummy(){}    //do nothing
 
-static int user_score = 0;
+static struct status gamestat = {ENTRY, 1, 0, 1};
 static char input[BUFF_SIZE];
-static enum level game_enum = ENTRY;
 static struct s_ship mothership;
-static struct target root;
+static struct target first;
 
 int random_value(int low, int high){
  return (int)(low + rand() / (RAND_MAX + 1.0) * (high - low));
@@ -88,7 +87,7 @@ void draw_UFO(struct target* t){
 
 void draw_ship(struct s_ship* ship){
   double scale = 2.0;
-  if(game_enum == DEAD && ship->life <= 0)
+  if(gamestat.game_enum == DEAD && ship->life <= 0)
     scale = (-(ship->life) % 6) * 0.5;
   else
     gfx_ellipse(ship->x, ship->y - 16 * scale, 33 * scale, 19 * scale, BLUE);
@@ -145,7 +144,7 @@ void text_align(char* text, enum alignment al, int y_offset, enum color c, int a
 
 void out_text(){
   char text[32];
-  switch(game_enum){
+  switch(gamestat.game_enum){
     case ENTRY:
       gfx_fontScale(3);
       text_align("WELCOME", CENTRE, -200, RED, 255);
@@ -165,21 +164,36 @@ void out_text(){
       gfx_fontScale(2);
 
     case GAME:
-      sprintf(text,"Your score is: %d point%c", user_score, *((user_score==1)?"":"s"));
+      sprintf(text,"Your score is: %d point%c", gamestat.user_score, *((gamestat.user_score==1)?"":"s"));
       // gfx_textout(50, gfx_screenHeight() - 40, text, WHITE);
       text_align(text, LEFT, gfx_screenHeight() / 2 - 50, WHITE, 255);
+      gfx_fontScale(1);
+      int diff = 10;
+      while(gamestat.user_score > diff)
+        diff *= 2;
+      sprintf(text,"Bonus life for %d more point%c", diff - gamestat.user_score, *((gamestat.user_score==1)?"":"s"));
+      text_align(text, RIGHT, gfx_screenHeight() / 2 - 70, WHITE, 255);
+      gfx_fontScale(2);
       break;
 
     case DEAD:
       dummy();
       int tr = 255 * (1.0 + (double)mothership.life / EXP);
-      sprintf(text,"Your score was: %d point%c", user_score, *((user_score==1)?"":"s"));
       gfx_fontScale(3);
       text_align("YOU HAVE LOST", CENTRE, -200, RED, tr);
       gfx_fontScale(2);
+      sprintf(text,"Your score was: %d point%c", gamestat.user_score, *((gamestat.user_score==1)?"":"s"));
       text_align(text, CENTRE, 0, RED, tr);
       text_align("Press ENTER to start a new game", CENTRE, 80, RED, tr);
       text_align("Press ESCAPE to exit", CENTRE, 120, RED, tr);
+      break;
+
+    case FAIL:
+      gfx_fontScale(3);
+      text_align("Could not allocate memory", CENTRE, -150, RED, 255);
+      printf("%s\n", "Failed to allocate memory");
+      gfx_fontScale(2);
+      text_align("Press ESCAPE to exit", CENTRE, 120, RED, 255);
       break;
 
     case ENDGAME:
@@ -246,16 +260,16 @@ void target_action(struct target* t){
 }
 
 void add_to_score(int x){
-  user_score += x;
+  gamestat.user_score += x;
 }
 
 int score(){
-  return user_score;
+  return gamestat.user_score;
 }
 
 void save_score(){
-  printf("Congratulations %s, your final score was %d point%c :)\n", input_string(), user_score, *((user_score==1)?"":"s"));
-  user_score = 0;
+  printf("Congratulations %s, your final score was %d point%c :)\n", input_string(), gamestat.user_score, *((gamestat.user_score==1)?"":"s"));
+  gamestat.user_score = 0;
 }
 
 int y_boundry(){
@@ -275,7 +289,7 @@ char keyboard_actions(){
   int key = gfx_pollkey();
   //printf("%d\n", key);
   char to_return = 0;
-  switch(game_enum){
+  switch(gamestat.game_enum){
     case ENTRY:
       dummy();
       int index = 0;
@@ -283,7 +297,8 @@ char keyboard_actions(){
       switch(key){
 
         case SDLK_RETURN:  //ENTER
-          set_game_state(GAME);
+          if(strlen(input) > 0)
+            set_game_state(GAME);
           break;
 
         case SDLK_BACKSPACE:
@@ -359,6 +374,10 @@ char keyboard_actions(){
       }
       break;
 
+    case FAIL:
+      if(key == SDLK_ESCAPE)
+        set_game_state(ENDGAME);
+
     case ENDGAME:
       break;
   }
@@ -366,7 +385,7 @@ char keyboard_actions(){
 }
 
 char game_state(){
-  return game_enum;
+  return gamestat.game_enum;
 }
 
 void init_target(struct target* new){
@@ -378,13 +397,13 @@ void init_target(struct target* new){
   new->colour = 2 * random_value(0,5) + 1;
   new->y = random_value(gfx_screenHeight() / 8, gfx_screenHeight() / 2);
   new->angle = deg_to_rad(random_value_d(10.0, 60.0));
-  new->points = (char)random_value(1,16);
-  new->speed = 50 * new->points;
+  new->points = (char)random_value(1,10);
+  new->speed = 100 * new->points / gamestat.refresh;
   new->ball.active = random_value(400,1000);
 }
 
 int add_target(int amount){
-  struct target* f = &root;
+  struct target* f = root();
   while(f->next != NULL)
     f = f->next;
   while(amount--){
@@ -401,15 +420,24 @@ int add_target(int amount){
 }
 
 void del_targets(){
-  struct target* f = &root;
+  struct target* f = root();
   while((++f)->next != NULL)
     free(f);
 }
 
 void set_game_state(enum level k){
-  game_enum = k;
+  gamestat.game_enum = k;
+}
+
+void set_refresh_rate(int r){
+  // assert(r > 0);
+  gamestat.refresh = r;
 }
 
 struct s_ship* m_ship(){
   return &mothership;
+}
+
+struct target* root(){
+  return &first;
 }

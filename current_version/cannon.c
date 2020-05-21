@@ -19,41 +19,7 @@ int main(){
   gfx_fontScale(3);
 
   int refresh_rate = 90;
-
-  const int targets = 4;
-  struct target t[targets];
-  // Targets should be sorted by size- smallest target last
-  t[0].x = 0;                         //initial x coordinate
-  t[0].y = gfx_screenHeight() / 4;    //initial y coordinate
-  t[0].state = R_UP;                  //initial target direction
-  t[0].speed = 500.0;                 //pixels per second (only positive values)
-  t[0].angle = deg_to_rad(45);        //initial target angle (only positive values)
-  t[0].colour = GREEN;                //target colour
-  t[0].points = 1;                    //how many points user gets for hitting the target
-
-  t[1].x = gfx_screenWidth();         //initial x coordinate
-  t[1].y = gfx_screenHeight() / 2;    //initial y coordinate
-  t[1].state = L_DOWN;                //initial target direction
-  t[1].speed = 600.0;                 //pixels per second (only positive values)
-  t[1].angle = deg_to_rad(20);        //initial target angle (only positive values)
-  t[1].colour = YELLOW;               //target colour
-  t[1].points = 3;                    //how many points user gets for hitting the target
-
-  t[2].x = 0;                         //initial x coordinate
-  t[2].y = 0;                         //initial y coordinate
-  t[2].state = R_DOWN;                //initial target direction
-  t[2].speed = 700.0;                 //pixels per second (only positive values)
-  t[2].angle = deg_to_rad(5);         //initial target angle (only positive values)
-  t[2].colour = CYAN;                 //target colour
-  t[2].points = 5;                    //how many points user gets for hitting the target
-
-  t[3].x = gfx_screenWidth();         //initial x coordinate
-  t[3].y = y_boundry();               //initial y coordinate
-  t[3].state = L_UP;                  //initial target direction
-  t[3].speed = 600.0;                 //pixels per second (only positive values)
-  t[3].angle = deg_to_rad(50);        //initial target angle (only positive values)
-  t[3].colour = WHITE;                //target colour
-  t[3].points = 3;                    //how many points user gets for hitting the target
+  set_refresh_rate(refresh_rate);
 
   const int missiles = 3;
   int active_missiles = 0;
@@ -77,15 +43,10 @@ int main(){
   rocket_speed /= refresh_rate;
   cannon_speed /= refresh_rate;
   bullet_speed /= refresh_rate;
-  for(int n = 0; n < targets; n++){
-    t[n].ball.active = random_value(400,1000);
-    t[n].speed /= refresh_rate;
-    assert(t[n].angle > 0);
-    assert(t[n].speed > 0);
-  }
-  //t[0].ball.active = 10;
 
-  add_target(10);
+  add_target(4);
+  struct target* tar;
+
   unsigned long long time;
 
   while (game_state() != ENDGAME) {
@@ -102,8 +63,11 @@ int main(){
         }
         draw_ship(ship);
         draw_lifes(ship->life);
-        for(int n = 0; n < targets; n++){
-          draw_UFO(&(t[n]));
+
+        tar = root();
+        while(tar != NULL){
+          draw_UFO(tar);
+          tar = tar->next;
         }
 
         if(game_state() == PAUSED){
@@ -120,8 +84,10 @@ int main(){
       }
 
       if(game_state() < PAUSED){
-        for(int n = 0; n < targets; n++){
-          target_action(&(t[n]));
+        tar = root();
+        while(tar != NULL){
+          target_action(tar);
+          tar = tar->next;
         }
       }
 
@@ -129,19 +95,21 @@ int main(){
         if(active_missiles > 0){
           for(int o = 0; o < missiles; o++){
             if(r[o].active){
-              for(int n = 0; n < targets; n++){
-                if(t[n].state > 0){
-                  double dx = fabs(r[o].x - t[n].x);
+              tar = root();
+              while(tar != NULL){
+                if(tar->state > 0){
+                  double dx = fabs(r[o].x - tar->x);
                   if (dx <= ufo_x() + bullet_size){
                     double dy = (ufo_x() + bullet_size - dx) * (ufo_y() + bullet_size) / (ufo_x() + bullet_size);
-                    if ((t[n].y - r[o].y) <= dy && (t[n].y - r[o].y) > 0){
-                      t[n].state = -10;
+                    if ((tar->y - r[o].y) <= dy && (tar->y - r[o].y) > 0){
+                      tar->state = -10;
                       r[o].active = 0;
-                      add_to_score(t[n].points);
+                      add_to_score(tar->points);
                       active_missiles--;
                     }
                   }
                 }
+                tar = tar->next;
               }
               if(r[o].active){
                 r[o].y -= rocket_speed;
@@ -154,16 +122,17 @@ int main(){
           }
         }
 
-        for(int n = 0; n < targets; n++){
-          switch(t[n].ball.active){
+        tar = root();
+        while(tar != NULL && game_state() != DEAD){
+          switch(tar->ball.active){
             case 0:
               dummy();
-              double dy = fabs(t[n].ball.y - ship->y + 16);
+              double dy = fabs(tar->ball.y - ship->y + 16);
               if(dy < 50){
-                double dx = fabs(t[n].ball.x - ship->x);
+                double dx = fabs(tar->ball.x - ship->x);
                 if(dx < 80){
                   if(hypot(dx - 56.5, dy) + hypot(dx + 56.5, dy) < 162){
-                    t[n].ball.active = -10;
+                    tar->ball.active = -10;
                     ship->life--;
                     if(!ship->life){
                       set_game_state(DEAD);
@@ -174,44 +143,48 @@ int main(){
                         }
                         active_missiles = 0;
                       }
-                      for(int p = 0; p < targets; p++){
-                        if(t[n].ball.active < 0)  t[n].ball.active = random_value(400,1000);
+                      tar = root();
+                      while(tar != NULL){
+                        if(tar->ball.active < 0)
+                          tar->ball.active = random_value(400,1000);
+                        tar = tar->next;
                       }
                     }
                   }
                 }
               }
-              if(!(t[n].ball.active)){
-                t[n].ball.x += bullet_speed * sin(t[n].ball.angle);
-                if(t[n].ball.x < 0 || t[n].ball.x > gfx_screenWidth()){
-                  t[n].ball.active = random_value(400,1000);
+              if(!(tar->ball.active)){
+                tar->ball.x += bullet_speed * sin(tar->ball.angle);
+                if(tar->ball.x < 0 || tar->ball.x > gfx_screenWidth()){
+                  tar->ball.active = random_value(400,1000);
                 }
                 else{
-                  t[n].ball.y += bullet_speed * cos(t[n].ball.angle);
-                  if(t[n].ball.y > gfx_screenHeight()){
-                    t[n].ball.active = random_value(400,1000);
+                  tar->ball.y += bullet_speed * cos(tar->ball.angle);
+                  if(tar->ball.y > gfx_screenHeight()){
+                    tar->ball.active = random_value(400,1000);
                   }
                 }
               }
               break;
 
             case 1:
-              t[n].ball.x = t[n].x;
-              t[n].ball.y = t[n].y;
-              double tan = (ship->x - t[n].x)/(ship->y - 16 - t[n].y);
-              t[n].ball.angle = atan(tan);
-              t[n].ball.active--;
+              tar->ball.x = tar->x;
+              tar->ball.y = tar->y;
+              double tan = (ship->x - tar->x)/(ship->y - 16 - tar->y);
+              tar->ball.angle = atan(tan);
+              tar->ball.active--;
               break;
 
             case -1:
-              t[n].ball.active = random_value(400,1000);
+              tar->ball.active = random_value(400,1000);
               break;
 
             default:
-              if(t[n].state != OFF)
-                step_to_zero(&t[n].ball.active);
+              if(tar->state != OFF)
+                step_to_zero(&(tar->ball.active));
               break;
           }
+          tar = tar->next;
         }
 
         if(score() > next_score){
