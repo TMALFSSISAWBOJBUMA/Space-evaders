@@ -84,6 +84,8 @@ int main(){
     assert(t[n].speed > 0);
   }
   //t[0].ball.active = 10;
+
+  add_target(10);
   unsigned long long time;
 
   while (game_state() != ENDGAME) {
@@ -206,7 +208,8 @@ int main(){
               break;
 
             default:
-              step_to_zero(&t[n].ball.active);
+              if(t[n].state != OFF)
+                step_to_zero(&t[n].ball.active);
               break;
           }
         }
@@ -251,6 +254,7 @@ int main(){
   }
   //quit loop
   save_score();
+  del_targets();
   gfx_delFonts();
   return 0;
 }

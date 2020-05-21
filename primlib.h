@@ -6,7 +6,7 @@
 
 int gfx_init();
 enum color { BLACK, RED, D_RED, GREEN, D_GREEN, BLUE, D_BLUE, CYAN, MAGENTA, YELLOW,
-             D_YELLOW, ORANGE, WHITE, GRAY, COLOR_MAX };
+             D_YELLOW, WHITE, GRAY, ORANGE, COLOR_MAX };
 void gfx_pixel(int x, int y, enum color c);
 void gfx_line(int x1, int y1, int x2, int y2, enum color c);
 void gfx_circle(int x, int y, int r, enum color c);

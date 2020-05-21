@@ -1,4 +1,4 @@
-enum dir { R_UP = 1, R_DOWN, L_DOWN, L_UP, OFF};      //target's state
+enum dir {OFF, R_UP, R_DOWN, L_DOWN, L_UP};      //target's state
 enum level {ENTRY, GAME, DEAD, PAUSED, PAUSED_U, ENDGAME};    //stages of the game
 enum to_do {NTHG, MOV_L, MOV_R, SHOOT = 4};     //keyboard_actions() output
 enum alignment {LEFT, CENTRE, RIGHT};
@@ -78,6 +78,10 @@ void clear_input();             //clear the input buffer
 char keyboard_actions();
 
 char game_state();
+
+int add_target(int amount);
+
+void del_targets();
 
 void set_game_state(enum level k);
 

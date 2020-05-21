@@ -14,6 +14,7 @@ static int user_score = 0;
 static char input[BUFF_SIZE];
 static enum level game_enum = ENTRY;
 static struct s_ship mothership;
+static struct target root;
 
 int random_value(int low, int high){
  return (int)(low + rand() / (RAND_MAX + 1.0) * (high - low));
@@ -62,25 +63,27 @@ int ufo_y(){
 }
 
 void draw_UFO(struct target* t){
-  if(t->state > 0){
-    int dx = UFO_WIDTH;
-    int dy = UFO_HEIGHT/2;
-    //gfx_filledEllipse(t->x ,t->y,dy-1,dx-9,GREEN);
-    gfx_filledCircle(t->x, t->y + dy, dy, t->colour);
-    gfx_filledCircle(t->x, t->y - dy, dy, t->colour);
-    gfx_filledEllipse(t->x ,t->y, dx, dy, t->colour + 1);
-    gfx_line(t->x - dx, t->y, t->x + dx, t->y, t->colour);
-    if(t->ball.active > 0){
-      int nx = dx * t->ball.active / 1000;
-      gfx_line(t->x - nx, t->y, t->x + nx,t->y, RED);
+  if(t->state != OFF){
+    if(t->state > OFF){
+      int dx = UFO_WIDTH;
+      int dy = UFO_HEIGHT/2;
+      //gfx_filledEllipse(t->x ,t->y,dy-1,dx-9,GREEN);
+      gfx_filledCircle(t->x, t->y + dy, dy, t->colour);
+      gfx_filledCircle(t->x, t->y - dy, dy, t->colour);
+      gfx_filledEllipse(t->x ,t->y, dx, dy, t->colour + 1);
+      gfx_line(t->x - dx, t->y, t->x + dx, t->y, t->colour);
+      if(t->ball.active > 0){
+        int nx = dx * t->ball.active / 1000;
+        gfx_line(t->x - nx, t->y, t->x + nx,t->y, RED);
+      }
+      else if( !(t->ball.active) )
+        gfx_filledCircle(t->ball.x, t->ball.y, 5, ORANGE);
+      else
+        gfx_filledCircle(t->ball.x, t->ball.y, -(t->ball.active), YELLOW);
     }
-    else if( !(t->ball.active) )
-      gfx_filledCircle(t->ball.x, t->ball.y, 5, ORANGE);
     else
-      gfx_filledCircle(t->ball.x, t->ball.y, -(t->ball.active), YELLOW);
+      gfx_filledCircle(t->x, t->y, (t->state % 5) * -15 , YELLOW);
   }
-  else
-    gfx_filledCircle(t->x, t->y, (t->state % 5) * -15 , YELLOW);
 }
 
 void draw_ship(struct s_ship* ship){
@@ -186,11 +189,7 @@ void out_text(){
 
 void target_action(struct target* t){
   switch(t->state){
-    case 0:
-      t->x = 0;
-      t->y = random_value(gfx_screenHeight() / 8, gfx_screenHeight() / 2);
-      t->angle = deg_to_rad(random_value_d(10.0, 60.0));
-      t->state = R_UP;
+    case OFF:
       break;
 
     case R_UP:
@@ -239,9 +238,6 @@ void target_action(struct target* t){
       else if(t->y >= y_boundry() - ufo_y()){
         t->state = L_UP;
       }
-      break;
-
-    case OFF:
       break;
 
     default:
@@ -371,6 +367,43 @@ char keyboard_actions(){
 
 char game_state(){
   return game_enum;
+}
+
+void init_target(struct target* new){
+  new->state = random_value(R_UP,L_UP);
+  if(new->state < L_DOWN)
+    new->x = -ufo_x();
+  else
+    new->x = gfx_screenWidth() + ufo_x();
+  new->colour = 2 * random_value(0,5) + 1;
+  new->y = random_value(gfx_screenHeight() / 8, gfx_screenHeight() / 2);
+  new->angle = deg_to_rad(random_value_d(10.0, 60.0));
+  new->points = (char)random_value(1,16);
+  new->speed = 50 * new->points;
+  new->ball.active = random_value(400,1000);
+}
+
+int add_target(int amount){
+  struct target* f = &root;
+  while(f->next != NULL)
+    f = f->next;
+  while(amount--){
+    f->next = malloc(sizeof(*f));
+    if(f->next == NULL)
+      return -1;
+    else{
+      f = f->next;
+      init_target(f);
+    }
+  }
+  f->next = NULL;
+  return amount;
+}
+
+void del_targets(){
+  struct target* f = &root;
+  while((++f)->next != NULL)
+    free(f);
 }
 
 void set_game_state(enum level k){
