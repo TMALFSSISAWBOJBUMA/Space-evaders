@@ -9,6 +9,7 @@ void step_to_zero(int* num){
   else            ++(*num);
 }
 
+typedef struct target* PTR;
 
 int main(){
   if (gfx_init())
@@ -44,8 +45,9 @@ int main(){
   cannon_speed /= refresh_rate;
   bullet_speed /= refresh_rate;
 
-  add_target(4);
-  struct target* tar;
+  if(add_target(4) == -1)
+    set_game_state(FAIL);
+  PTR tar;
 
   unsigned long long time;
 
@@ -144,11 +146,11 @@ int main(){
                         }
                         active_missiles = 0;
                       }
-                      tar = root();
-                      while(tar != NULL){
-                        if(tar->ball.active < 0)
-                          tar->ball.active = random_value(400,1000);
-                        tar = tar->next;
+                      PTR temp = root(); // new pointer to clear remaining bullets
+                      while(temp != NULL){
+                        if(temp->ball.active < 0)
+                          temp->ball.active = random_value(400,1000);
+                        temp = temp->next;
                       }
                     }
                   }
@@ -170,7 +172,7 @@ int main(){
 
             case 1:
               tar->ball.x = tar->x;
-              tar->ball.y = tar->y;
+              tar->ball.y = tar->y ;
               double tan = (ship->x - tar->x)/(ship->y - 16 - tar->y);
               tar->ball.angle = atan(tan);
               tar->ball.active--;

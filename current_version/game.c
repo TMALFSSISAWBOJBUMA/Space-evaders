@@ -5,8 +5,8 @@
 #define UFO_WIDTH     30
 #define UFO_HEIGHT    20
 #define BUFF_SIZE     20
-#define EXP           60
 
+typedef struct target* PTR;
 
 void dummy(){}    //do nothing
 
@@ -61,7 +61,7 @@ int ufo_y(){
   return UFO_HEIGHT;
 }
 
-void draw_UFO(struct target* t){
+void draw_UFO(PTR t){
   if(t->state != OFF){
     if(t->state > OFF){
       int dx = UFO_WIDTH;
@@ -166,19 +166,21 @@ void out_text(){
     case GAME:
       sprintf(text,"Your score is: %d point%c", gamestat.user_score, *((gamestat.user_score==1)?"":"s"));
       // gfx_textout(50, gfx_screenHeight() - 40, text, WHITE);
-      text_align(text, LEFT, gfx_screenHeight() / 2 - 50, WHITE, 255);
+      text_align(text, LEFT, gfx_screenHeight() / 2 - 40, WHITE, 255);
+      sprintf(text,"LVL %d", gamestat.lvl);
+      text_align(text, CENTRE, gfx_screenHeight() / 2 - 40, WHITE, 255);
       gfx_fontScale(1);
       int diff = 10;
       while(gamestat.user_score > diff)
         diff *= 2;
       sprintf(text,"Bonus life for %d more point%c", diff - gamestat.user_score, *((gamestat.user_score==1)?"":"s"));
-      text_align(text, RIGHT, gfx_screenHeight() / 2 - 70, WHITE, 255);
+      text_align(text, RIGHT, gfx_screenHeight() / 2 - 35, WHITE, 255);
       gfx_fontScale(2);
       break;
 
     case DEAD:
       dummy();
-      int tr = 255 * (1.0 + (double)mothership.life / EXP);
+      int tr = 255 * (1.0 + (double)mothership.life / 60);
       gfx_fontScale(3);
       text_align("YOU HAVE LOST", CENTRE, -200, RED, tr);
       gfx_fontScale(2);
@@ -388,7 +390,7 @@ char game_state(){
   return gamestat.game_enum;
 }
 
-void init_target(struct target* new){
+void init_target(PTR new){
   new->state = random_value(R_UP,L_UP);
   if(new->state < L_DOWN)
     new->x = -ufo_x();
@@ -404,7 +406,7 @@ void init_target(struct target* new){
 
 int add_target(int amount){
   gamestat.active_targets = 0;
-  struct target* f = root();
+  PTR f = root();
   while(f->next != NULL){
     gamestat.active_targets++;
     init_target(f);
@@ -421,7 +423,7 @@ int add_target(int amount){
     }
   }
   f->next = NULL;
-  return amount;
+  return 1;
 }
 
 char* num_targets(){
@@ -429,7 +431,7 @@ char* num_targets(){
 }
 
 void del_targets(){
-  struct target* f = root();
+  PTR f = root();
   while((++f)->next != NULL)
     free(f);
 }
@@ -440,7 +442,8 @@ void set_game_state(enum level k){
 
 void next_lvl(){
   gamestat.lvl ++;
-  add_target(gamestat.lvl);
+  if(add_target(gamestat.lvl) == -1)
+    gamestat.game_enum = FAIL;
 }
 
 void set_refresh_rate(int r){
