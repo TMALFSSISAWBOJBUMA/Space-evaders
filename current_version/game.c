@@ -84,17 +84,19 @@ void draw_UFO(struct target* t){
 }
 
 void draw_ship(struct s_ship* ship){
-  int scale = 2;
+  double scale = 2.0;
   if(game_enum == DEAD && ship->life <= 0)
     scale = (-(ship->life) % 6) * 0.5;
+  else
+    gfx_ellipse(ship->x, ship->y - 16 * scale, 33 * scale, 19 * scale, BLUE);
 
   gfx_filledRect(ship->x - 6 * scale, ship->y - 25 * scale, ship->x + 6 * scale, ship->y, WHITE);
   gfx_filledTriangle(ship->x - 6 * scale, ship->y, ship->x + 6 * scale, ship->y, ship->x, ship->y + 7 * scale, ORANGE);
   gfx_filledTriangle(ship->x - 10 * scale, ship->y, ship->x + 10 * scale, ship->y, ship->x, ship->y + 3 * scale, WHITE);
   gfx_filledTriangle(ship->x - 10 * scale, ship->y, ship->x - 6 * scale, ship->y - 6 * scale, ship->x - 6 * scale, ship->y, WHITE);
   gfx_filledTriangle(ship->x + 10 * scale, ship->y, ship->x + 6 * scale, ship->y - 6 * scale, ship->x + 6 * scale, ship->y, WHITE);
-  gfx_filledTriangle(ship->x - 31 * scale, ship->y - 31 * scale, ship->x - 6 * scale, ship->y - 20 * scale, ship->x - 6 * scale, ship->y - 6 * scale, WHITE);
-  gfx_filledTriangle(ship->x + 31 * scale, ship->y - 31 * scale, ship->x + 6 * scale, ship->y - 20 * scale, ship->x + 6 * scale, ship->y - 6 * scale, WHITE);
+  gfx_filledTriangle(ship->x - 27 * scale, ship->y - 27 * scale, ship->x - 6 * scale, ship->y - 20 * scale, ship->x - 6 * scale, ship->y - 6 * scale, WHITE);
+  gfx_filledTriangle(ship->x + 27 * scale, ship->y - 27 * scale, ship->x + 6 * scale, ship->y - 20 * scale, ship->x + 6 * scale, ship->y - 6 * scale, WHITE);
   gfx_filledTriangle(ship->x - 16 * scale, ship->y - 21 * scale, ship->x, ship->y - 14 * scale, ship->x, ship->y - 5 * scale, GRAY);
   gfx_filledTriangle(ship->x + 16 * scale, ship->y - 21 * scale, ship->x, ship->y - 14 * scale, ship->x, ship->y - 5 * scale, GRAY);
 }
@@ -118,9 +120,22 @@ void draw_lifes(int lifes){
   }
 }
 
-void text_centre(char* text, int y_offset, enum color c, int a){
+void text_align(char* text, enum alignment al, int y_offset, enum color c, int a){
   int size = strlen(text) - 1;
-  int x = gfx_screenWidth() / 2 - 4 * gfx_fontSize() * size;
+  int x;
+  switch(al){
+    case LEFT:
+      x = 50;
+      break;
+
+    case CENTRE:
+      x = gfx_screenWidth() / 2 - 4 * gfx_fontSize() * size;
+      break;
+
+    case RIGHT:
+      x = gfx_screenWidth() - 50 - 8 * gfx_fontSize() * size;
+      break;
+  }
   y_offset += (gfx_screenHeight() / 2 + 4 * gfx_fontSize());
   gfx_textoutA(x, y_offset, text, c, a);
 }
@@ -130,25 +145,26 @@ void out_text(){
   switch(game_enum){
     case ENTRY:
       gfx_fontScale(3);
-      text_centre("WELCOME", -200, RED, 255);
-      text_centre("Type in your name below", -100, RED, 255);
+      text_align("WELCOME", CENTRE, -200, RED, 255);
+      text_align("Type in your name below", CENTRE, -100, RED, 255);
       //gfx_rect(gfx_screenWidth() / 2 - 240, gfx_screenHeight() / 2 + 12, gfx_screenWidth() / 2 + 240, gfx_screenHeight() / 2 - 12, WHITE);
-      text_centre(input_string(), 0, GREEN, 255);
-      text_centre("Press ENTER to START", 50, RED, 255);
+      text_align(input_string(), CENTRE, 0, GREEN, 255);
+      text_align("Press ENTER to START", CENTRE, 50, RED, 255);
       gfx_fontScale(2);
       break;
 
     case PAUSED:
     case PAUSED_U:
-      text_centre("Press SPACE to continue", 80, RED, 255);
-      text_centre("Press ESCAPE to exit", 120, RED, 255);
+      text_align("Press SPACE to continue", CENTRE, 80, RED, 255);
+      text_align("Press ESCAPE to exit", CENTRE, 120, RED, 255);
       gfx_fontScale(3);
-      text_centre("PAUSED", -150, RED, 255);
+      text_align("PAUSED", CENTRE, -150, RED, 255);
       gfx_fontScale(2);
 
     case GAME:
       sprintf(text,"Your score is: %d point%c", user_score, *((user_score==1)?"":"s"));
-      gfx_textout(50, gfx_screenHeight() - 40, text, WHITE);
+      // gfx_textout(50, gfx_screenHeight() - 40, text, WHITE);
+      text_align(text, LEFT, gfx_screenHeight() / 2 - 50, WHITE, 255);
       break;
 
     case DEAD:
@@ -156,11 +172,11 @@ void out_text(){
       int tr = 255 * (1.0 + (double)mothership.life / EXP);
       sprintf(text,"Your score was: %d point%c", user_score, *((user_score==1)?"":"s"));
       gfx_fontScale(3);
-      text_centre("YOU HAVE LOST", -200, RED, tr);
+      text_align("YOU HAVE LOST", CENTRE, -200, RED, tr);
       gfx_fontScale(2);
-      text_centre(text, 0, RED, tr);
-      text_centre("Press ENTER to start a new game", 80, RED, tr);
-      text_centre("Press ESCAPE to exit", 120, RED, tr);
+      text_align(text, CENTRE, 0, RED, tr);
+      text_align("Press ENTER to start a new game", CENTRE, 80, RED, tr);
+      text_align("Press ESCAPE to exit", CENTRE, 120, RED, tr);
       break;
 
     case ENDGAME:
@@ -242,6 +258,7 @@ int score(){
 }
 
 void save_score(){
+  printf("Congratulations %s, your final score was %d point%c :)\n", input_string(), user_score, *((user_score==1)?"":"s"));
   user_score = 0;
 }
 

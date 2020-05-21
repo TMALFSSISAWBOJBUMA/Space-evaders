@@ -23,8 +23,8 @@ struct RGB {
 };
 
 static struct RGB colors[COLOR_MAX] = {
-    {0, 0, 0}, {255, 0, 0}, {0, 255, 0}, {0, 100, 0}, {0, 0, 255},
-    {0, 255, 255}, {255, 0, 255}, {255, 255, 0}, {100, 100, 0},
+    {0, 0, 0}, {255, 0, 0}, {100, 0, 0}, {0, 255, 0}, {0, 100, 0}, {0, 0, 255},
+    {0, 0, 100}, {0, 255, 255}, {255, 0, 255}, {255, 255, 0}, {100, 100, 0},
     {255, 140, 0}, {255, 255, 255}, {100, 100, 100}};
 
 // Screen dimension constants
@@ -41,6 +41,11 @@ void gfx_setAlpha(int pct){ //0-transparent, 100-full colour
   if(pct < 0) pct = 0;
   else if(pct > 100)  pct = 100;
   alpha = pct * 255 / 100;
+}
+
+void gfx_ellipse(int x, int y, int rx, int ry, enum color c){
+  assert(c < COLOR_MAX);
+  ellipseRGBA(renderer, x, y, rx, ry, colors[c].r, colors[c].g, colors[c].b, alpha);
 }
 
 void gfx_filledEllipse(int x, int y, int rx, int ry, enum color c){

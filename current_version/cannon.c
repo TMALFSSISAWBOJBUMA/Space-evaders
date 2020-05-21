@@ -155,20 +155,27 @@ int main(){
         for(int n = 0; n < targets; n++){
           switch(t[n].ball.active){
             case 0:
-              if(hypot(t[n].ball.x -ship->x, t[n].ball.y - ship->y) < 40){
-                t[n].ball.active = -10;
-                ship->life--;
-                if(!ship->life){
-                  set_game_state(DEAD);
-                  ship->life = -60;
-                  if(active_missiles > 0){
-                    for(int o = 0; o < missiles; o++){
-                      r[o].active = 0;
+              dummy();
+              double dy = fabs(t[n].ball.y - ship->y + 16);
+              if(dy < 50){
+                double dx = fabs(t[n].ball.x - ship->x);
+                if(dx < 80){
+                  if(hypot(dx - 56.5, dy) + hypot(dx + 56.5, dy) < 162){
+                    t[n].ball.active = -10;
+                    ship->life--;
+                    if(!ship->life){
+                      set_game_state(DEAD);
+                      ship->life = -60;
+                      if(active_missiles > 0){
+                        for(int o = 0; o < missiles; o++){
+                          r[o].active = 0;
+                        }
+                        active_missiles = 0;
+                      }
+                      for(int p = 0; p < targets; p++){
+                        if(t[n].ball.active < 0)  t[n].ball.active = random_value(400,1000);
+                      }
                     }
-                    active_missiles = 0;
-                  }
-                  for(int p = 0; p < targets; p++){
-                    if(t[n].ball.active < 0)  t[n].ball.active = random_value(400,1000);
                   }
                 }
               }
@@ -189,7 +196,7 @@ int main(){
             case 1:
               t[n].ball.x = t[n].x;
               t[n].ball.y = t[n].y;
-              double tan = (ship->x - t[n].x)/(ship->y - t[n].y);
+              double tan = (ship->x - t[n].x)/(ship->y - 16 - t[n].y);
               t[n].ball.angle = atan(tan);
               t[n].ball.active--;
               break;
@@ -243,7 +250,7 @@ int main(){
     }
   }
   //quit loop
-  printf("Congratulations %s, your final score was %d point%c :)\n", input_string(), score(), *((score()==1)?"":"s"));
+  save_score();
   gfx_delFonts();
   return 0;
 }

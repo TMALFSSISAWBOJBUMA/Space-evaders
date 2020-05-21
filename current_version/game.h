@@ -1,6 +1,7 @@
 enum dir { R_UP = 1, R_DOWN, L_DOWN, L_UP, OFF};      //target's state
 enum level {ENTRY, GAME, DEAD, PAUSED, PAUSED_U, ENDGAME};    //stages of the game
 enum to_do {NTHG, MOV_L, MOV_R, SHOOT = 4};     //keyboard_actions() output
+enum alignment {LEFT, CENTRE, RIGHT};
 
 struct bullet{
   double x;
@@ -33,6 +34,7 @@ struct s_ship{
   int life   :8;
 };
 
+void dummy();
 
 int ufo_y();
 int ufo_x();
@@ -55,7 +57,7 @@ void draw_missile(struct rocket* r);                          //draws rocket wit
 
 void draw_lifes(int lifes);                                   //draws (lifes) hearts in the right-bottom corner
 
-void text_centre(char* text, int y, enum color c, int a);     //draw text centered in the middle of the screen with a y offset
+void text_align(char* text, enum alignment al, int y, enum color c, int a);     //draw text centered in the middle of the screen with a y offset
 
 void out_text();                                              //show texts based on game's status
 
@@ -64,6 +66,8 @@ void target_action(struct target* t);                         //change parameter
 void add_to_score(int x);       //increase score by x
 
 int score();                    //return current score
+
+void save_score();
 
 int y_boundry();                //height of the line targets bounce of
 
