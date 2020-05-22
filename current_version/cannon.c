@@ -47,7 +47,7 @@ int main(){
   cannon_speed /= refresh_rate;
   bullet_speed /= refresh_rate;
 
-  if(add_target(4) == -1)
+  if(init_new_targets(4) == -1)
     set_game_state(FAIL);
   PTR tar;
 
@@ -68,7 +68,7 @@ int main(){
         draw_ship(ship);
         draw_lifes(ship->life);
 
-        tar = root();
+        tar = head_target();
         while(tar != NULL){
           draw_UFO(tar);
           tar = tar->next;
@@ -88,7 +88,7 @@ int main(){
       }
 
       if(game_state() < PAUSED){
-        tar = root();
+        tar = head_target();
         while(tar != NULL){
           target_action(tar);
           tar = tar->next;
@@ -99,7 +99,7 @@ int main(){
         if(active_missiles > 0){
           for(int o = 0; o < missiles; o++){
             if(r[o].active){
-              tar = root();
+              tar = head_target();
               while(tar != NULL){
                 if(tar->state > 0){
                   double dx = fabs(r[o].x - tar->x);
@@ -127,7 +127,7 @@ int main(){
           }
         }
 
-        tar = root();
+        tar = head_target();
         while(tar != NULL && game_state() != DEAD){
           switch(tar->ball.active){
             case 0:
@@ -148,7 +148,7 @@ int main(){
                         }
                         active_missiles = 0;
                       }
-                      PTR temp = root(); // new pointer to clear remaining bullets
+                      PTR temp = head_target(); // new pointer to clear remaining bullets
                       while(temp != NULL){
                         if(temp->ball.active < 0)
                           temp->ball.active = random_value(400,1000);

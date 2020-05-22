@@ -42,11 +42,6 @@ struct status{
   char active_targets;
 };
 
-struct user{
-  char name [20];
-  unsigned int scores;
-};
-
 void dummy();
 
 int ufo_y();
@@ -94,7 +89,7 @@ char keyboard_actions();
 
 char game_state();
 
-int add_target(int amount);
+int init_new_targets(int amount);
 
 char* num_targets();
 
@@ -108,4 +103,4 @@ void set_refresh_rate(int r);
 
 struct s_ship* m_ship();
 
-struct target* root();
+struct target* head_target();

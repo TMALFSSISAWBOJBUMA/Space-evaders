@@ -5,7 +5,8 @@
 
 #define UFO_WIDTH     30
 #define UFO_HEIGHT    20
-#define BUFF_SIZE     20
+#define BUFF_SIZE     10
+#define SCORE_SIZE    8
 
 typedef struct target* PTR;
 
@@ -17,20 +18,61 @@ static struct status gamestat = {ENTRY, 1, 0, 1, 0};
 static char input[BUFF_SIZE + 1];
 static struct s_ship mothership;
 static struct target first;
-static struct user us[5];
+static struct user{
+  char name [BUFF_SIZE];
+  unsigned int scores;
+} us[SCORE_SIZE];
 
 void read_scores(){
   brd_ptr = fopen("./scores.txt","r");
   if(brd_ptr != NULL){
     int pos = 0;
-    char buff[50];
-    while(pos < 5){
-      if(fgets(buff ,51, brd_ptr) != NULL)
+    char buff[16];
+    while(pos < SCORE_SIZE){
+      if(fgets(buff ,16, brd_ptr) != NULL)
         sscanf(buff,"%s\t%u\n", &(us[pos].name[0]), &(us[pos].scores));
       pos++;
     }
     fclose(brd_ptr);
   }
+}
+
+void print_scores(){
+  gfx_fontScale(3);
+  text_align("SCOREBOARD", LEFT, -300, WHITE, 255);
+  gfx_fontScale(2);
+  int pos = 0;
+  char text[30];
+  while(pos < SCORE_SIZE){
+    if(us[pos].name[0] != 0){
+      sprintf(text,"%d.%10s %u", pos + 1, &(us[pos].name[0]), us[pos].scores);
+      text_align(text, LEFT, -260 + 20 * pos, WHITE, 255);
+    }
+    pos++;
+  }
+}
+
+void save_score(){
+  printf("Congratulations %s, your final score was %d point%c :)\n", input_string(), gamestat.user_score, *((gamestat.user_score==1)?"":"s"));
+  brd_ptr = fopen("./scores.txt","w");
+  if(brd_ptr != NULL){
+    int pos = 0;
+    while(us[pos].scores > gamestat.user_score)
+      pos++;
+    if(pos < SCORE_SIZE){
+      for(int i = SCORE_SIZE - 1; i > pos; i--){
+        strcpy(&(us[i].name[0]), &(us[i-1].name[0]));
+        us[i].scores = us[i-1].scores;
+      }
+      us[pos].scores = gamestat.user_score;
+      strcpy(&(us[pos].name[0]), input_string());
+    }
+    pos = -1;
+    while(++pos < SCORE_SIZE)
+      fprintf(brd_ptr,"%s\t%u\n", &(us[pos].name[0]), us[pos].scores);
+    fclose(brd_ptr);
+  }
+  gamestat.user_score = 0;
 }
 
 int random_value(int low, int high){
@@ -171,6 +213,7 @@ void out_text(){
       text_align(input_string(), CENTRE, 0, GREEN, 255);
       text_align("Press ENTER to START", CENTRE, 50, RED, 255);
       gfx_fontScale(2);
+      print_scores();
       break;
 
     case PAUSED:
@@ -180,6 +223,7 @@ void out_text(){
       gfx_fontScale(3);
       text_align("PAUSED", CENTRE, -150, RED, 255);
       gfx_fontScale(2);
+      print_scores();
 
     case GAME:
       sprintf(text,"Your score is: %d point%c", gamestat.user_score, *((gamestat.user_score==1)?"":"s"));
@@ -287,25 +331,6 @@ int score(){
   return gamestat.user_score;
 }
 
-void save_score(){
-  printf("Congratulations %s, your final score was %d point%c :)\n", input_string(), gamestat.user_score, *((gamestat.user_score==1)?"":"s"));
-  brd_ptr = fopen("./scores.txt","w");
-  if(brd_ptr != NULL){
-    int pos = 0;
-    while(gamestat.user_score < us[pos].scores)
-      pos++;
-    if(pos < 5){
-      us[pos].scores = gamestat.user_score;
-      strcpy(&(us[pos].name[0]), input_string());
-    }
-    pos = 0;
-    while(pos++ < 5)
-      fprintf(brd_ptr,"%s\t%u\n", &(us[pos].name[0]), us[pos].scores);
-    fclose(brd_ptr);
-  }
-  gamestat.user_score = 0;
-}
-
 int y_boundry(){
   return gfx_screenHeight() * 0.73;
 }
@@ -399,7 +424,7 @@ char keyboard_actions(){
           set_game_state(ENTRY);
           mothership.x = gfx_screenWidth() / 2;
           mothership.life = 5;
-          // save_score();
+          save_score();
           break;
 
         case SDLK_ESCAPE:
@@ -436,9 +461,9 @@ void init_target(PTR new){
   new->ball.active = random_value(400,1000);
 }
 
-int add_target(int amount){
+int init_new_targets(int amount){
   gamestat.active_targets = 0;
-  PTR f = root();
+  PTR f = head_target();
   while(f->next != NULL){
     gamestat.active_targets++;
     init_target(f);
@@ -463,7 +488,7 @@ char* num_targets(){
 }
 
 void del_targets(){
-  PTR f = root();
+  PTR f = head_target();
   PTR b = f->next;
   while(b){
     f = b;
@@ -478,7 +503,7 @@ void set_game_state(enum level k){
 
 void next_lvl(){
   gamestat.lvl ++;
-  if(add_target(gamestat.lvl) == -1)
+  if(init_new_targets(gamestat.lvl) == -1)
     gamestat.game_enum = FAIL;
 }
 
@@ -491,6 +516,6 @@ struct s_ship* m_ship(){
   return &mothership;
 }
 
-PTR root(){
+PTR head_target(){
   return &first;
 }
