@@ -1,6 +1,7 @@
 #include "primlib.h"
 #include "game.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 #define UFO_WIDTH     30
 #define UFO_HEIGHT    20
@@ -8,12 +9,29 @@
 
 typedef struct target* PTR;
 
+FILE* brd_ptr;
+
 void dummy(){}    //do nothing
 
 static struct status gamestat = {ENTRY, 1, 0, 1, 0};
-static char input[BUFF_SIZE];
+static char input[BUFF_SIZE + 1];
 static struct s_ship mothership;
 static struct target first;
+static struct user us[5];
+
+void read_scores(){
+  brd_ptr = fopen("./scores.txt","r");
+  if(brd_ptr != NULL){
+    int pos = 0;
+    char buff[50];
+    while(pos < 5){
+      if(fgets(buff ,51, brd_ptr) != NULL)
+        sscanf(buff,"%s\t%u\n", &(us[pos].name[0]), &(us[pos].scores));
+      pos++;
+    }
+    fclose(brd_ptr);
+  }
+}
 
 int random_value(int low, int high){
  return (int)(low + rand() / (RAND_MAX + 1.0) * (high - low));
@@ -203,7 +221,7 @@ void out_text(){
   }
 }
 
-void target_action(struct target* t){
+void target_action(PTR t){
   switch(t->state){
     case OFF:
       break;
@@ -271,6 +289,20 @@ int score(){
 
 void save_score(){
   printf("Congratulations %s, your final score was %d point%c :)\n", input_string(), gamestat.user_score, *((gamestat.user_score==1)?"":"s"));
+  brd_ptr = fopen("./scores.txt","w");
+  if(brd_ptr != NULL){
+    int pos = 0;
+    while(gamestat.user_score < us[pos].scores)
+      pos++;
+    if(pos < 5){
+      us[pos].scores = gamestat.user_score;
+      strcpy(&(us[pos].name[0]), input_string());
+    }
+    pos = 0;
+    while(pos++ < 5)
+      fprintf(brd_ptr,"%s\t%u\n", &(us[pos].name[0]), us[pos].scores);
+    fclose(brd_ptr);
+  }
   gamestat.user_score = 0;
 }
 
@@ -367,7 +399,7 @@ char keyboard_actions(){
           set_game_state(ENTRY);
           mothership.x = gfx_screenWidth() / 2;
           mothership.life = 5;
-          save_score();
+          // save_score();
           break;
 
         case SDLK_ESCAPE:
@@ -432,8 +464,12 @@ char* num_targets(){
 
 void del_targets(){
   PTR f = root();
-  while((++f)->next != NULL)
+  PTR b = f->next;
+  while(b){
+    f = b;
+    b = f->next;
     free(f);
+  }
 }
 
 void set_game_state(enum level k){
@@ -455,6 +491,6 @@ struct s_ship* m_ship(){
   return &mothership;
 }
 
-struct target* root(){
+PTR root(){
   return &first;
 }

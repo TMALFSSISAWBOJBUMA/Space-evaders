@@ -42,10 +42,17 @@ struct status{
   char active_targets;
 };
 
+struct user{
+  char name [20];
+  unsigned int scores;
+};
+
 void dummy();
 
 int ufo_y();
 int ufo_x();
+
+void read_scores();
 
 int random_value(int low, int high);                          //get random value from range [low,high]
 

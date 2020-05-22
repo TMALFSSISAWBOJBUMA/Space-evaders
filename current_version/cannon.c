@@ -12,6 +12,8 @@ void step_to_zero(int* num){
 typedef struct target* PTR;
 
 int main(){
+  read_scores();
+  //cos
   if (gfx_init())
     exit(3);
 
