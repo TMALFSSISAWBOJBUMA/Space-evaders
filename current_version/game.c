@@ -14,8 +14,8 @@ FILE* brd_ptr;
 
 void dummy(){}    //do nothing
 
-static struct status gamestat = {ENTRY, 1, 0, 1, 0};
-static char input[BUFF_SIZE + 1];
+static struct status gamestat = {ENTRY, 1, 0, 0, 0, 0};
+static char input[BUFF_SIZE];
 static struct s_ship mothership;
 static struct target first;
 static struct user{
@@ -52,22 +52,26 @@ void print_scores(){
   }
 }
 
+void update_scorebrd(){
+  int pos = 0;
+  while(us[pos].scores > gamestat.user_score)
+    pos++;
+  if(pos < SCORE_SIZE){
+    for(int i = SCORE_SIZE - 1; i > pos; i--){
+      strcpy(&(us[i].name[0]), &(us[i-1].name[0]));
+      us[i].scores = us[i-1].scores;
+    }
+    us[pos].scores = gamestat.user_score;
+    strcpy(&(us[pos].name[0]), input_string());
+  }
+}
+
 void save_score(){
   printf("Congratulations %s, your final score was %d point%c :)\n", input_string(), gamestat.user_score, *((gamestat.user_score==1)?"":"s"));
   brd_ptr = fopen("./scores.txt","w");
   if(brd_ptr != NULL){
-    int pos = 0;
-    while(us[pos].scores > gamestat.user_score)
-      pos++;
-    if(pos < SCORE_SIZE){
-      for(int i = SCORE_SIZE - 1; i > pos; i--){
-        strcpy(&(us[i].name[0]), &(us[i-1].name[0]));
-        us[i].scores = us[i-1].scores;
-      }
-      us[pos].scores = gamestat.user_score;
-      strcpy(&(us[pos].name[0]), input_string());
-    }
-    pos = -1;
+    update_scorebrd();
+    int pos = -1;
     while(++pos < SCORE_SIZE)
       fprintf(brd_ptr,"%s\t%u\n", &(us[pos].name[0]), us[pos].scores);
     fclose(brd_ptr);
@@ -223,7 +227,16 @@ void out_text(){
       gfx_fontScale(3);
       text_align("PAUSED", CENTRE, -150, RED, 255);
       gfx_fontScale(2);
+      update_scorebrd();
       print_scores();
+      break;
+
+    case NXT_LVL:
+      gfx_fontScale(3);
+      text_align("TARGETS SPAWNING IN", CENTRE, -150, WHITE, 255);
+      sprintf(text,"%u", gamestat.progress/1000);
+      text_align(text, CENTRE, 0, WHITE, 255);
+      gfx_fontScale(2);
 
     case GAME:
       sprintf(text,"Your score is: %d point%c", gamestat.user_score, *((gamestat.user_score==1)?"":"s"));
@@ -397,6 +410,7 @@ char keyboard_actions(){
       }
       break;
 
+    case NXT_LVL:
     case GAME:
       switch(key){
 
@@ -461,26 +475,42 @@ void init_target(PTR new){
   new->ball.active = random_value(400,1000);
 }
 
-int init_new_targets(int amount){
-  gamestat.active_targets = 0;
+int add_targets(int amount){
+  int num = 1;
   PTR f = head_target();
   while(f->next != NULL){
-    gamestat.active_targets++;
-    init_target(f);
+    num++;
     f = f->next;
   }
-  while(amount--){
+  if(num == 1)  num = 0;
+  gamestat.active_targets = num + amount;
+  while(++num < gamestat.active_targets){
     f->next = malloc(sizeof(*f));
     if(f->next == NULL)
       return -1;
     else{
-      gamestat.active_targets++;
       f = f->next;
-      init_target(f);
     }
   }
   f->next = NULL;
   return 1;
+}
+
+void activate_targets(){
+  PTR f = head_target();
+  while(f != NULL){
+    init_target(f);
+    f = f->next;
+  }
+}
+
+void transition(int time){
+  if(gamestat.progress > 999)
+    gamestat.progress -= time;
+  else{
+    activate_targets();
+    set_game_state(GAME);
+  }
 }
 
 char* num_targets(){
@@ -498,12 +528,15 @@ void del_targets(){
 }
 
 void set_game_state(enum level k){
+  if(k == NXT_LVL)
+    gamestat.progress = 3999;
   gamestat.game_enum = k;
 }
 
 void next_lvl(){
   gamestat.lvl ++;
-  if(init_new_targets(gamestat.lvl) == -1)
+  set_game_state(NXT_LVL);
+  if(add_targets(gamestat.lvl) == -1)
     gamestat.game_enum = FAIL;
 }
 

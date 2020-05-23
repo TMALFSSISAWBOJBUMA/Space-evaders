@@ -12,7 +12,7 @@ $(TARGET): ../primlib.o $(TARGET).o game.o
 $(TARGET).o: $(TARGET).c
 game.o: game.c game.h
 
-$(TARGET): $(TARGET).c ../primlib.h
+$(TARGET): $(TARGET).c ../primlib.h game.h
 
 clean:
 	-rm $(TARGET)

@@ -1,5 +1,5 @@
 enum dir {OFF, R_UP, R_DOWN, L_DOWN, L_UP};      //target's state
-enum level {ENTRY, GAME, DEAD, PAUSED, PAUSED_U, FAIL, ENDGAME};    //stages of the game
+enum level {ENTRY, NXT_LVL, GAME, DEAD, PAUSED, PAUSED_U, FAIL, ENDGAME};    //stages of the game
 enum to_do {NTHG, MOV_L, MOV_R, SHOOT = 4};     //keyboard_actions() output
 enum alignment {LEFT, CENTRE, RIGHT};
 
@@ -39,6 +39,7 @@ struct status{
   unsigned int refresh  :8;
   unsigned int user_score :20;
   unsigned int lvl :8;
+  unsigned int progress: 12;
   char active_targets;
 };
 
@@ -48,6 +49,10 @@ int ufo_y();
 int ufo_x();
 
 void read_scores();
+
+void update_scorebrd();
+
+void save_score();
 
 int random_value(int low, int high);                          //get random value from range [low,high]
 
@@ -77,8 +82,6 @@ void add_to_score(int x);       //increase score by x
 
 int score();                    //return current score
 
-void save_score();
-
 int y_boundry();                //height of the line targets bounce of
 
 char* input_string();           //pointer to input string
@@ -89,7 +92,11 @@ char keyboard_actions();
 
 char game_state();
 
-int init_new_targets(int amount);
+int add_targets(int amount);
+
+void activate_targets();
+
+void transition(int time);
 
 char* num_targets();
 

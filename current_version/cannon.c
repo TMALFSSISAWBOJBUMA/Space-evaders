@@ -4,12 +4,12 @@
 #include <assert.h>
 #include <math.h>
 
+typedef struct target* PTR;
+
 void step_to_zero(int* num){
   if(*num > 0)    --(*num);
   else            ++(*num);
 }
-
-typedef struct target* PTR;
 
 int main(){
   read_scores();
@@ -19,7 +19,7 @@ int main(){
 
   gfx_initFonts();
 
-  gfx_fontScale(3);
+  gfx_fontScale(2);
 
   int refresh_rate = 90;
   set_refresh_rate(refresh_rate);
@@ -47,15 +47,18 @@ int main(){
   cannon_speed /= refresh_rate;
   bullet_speed /= refresh_rate;
 
-  if(init_new_targets(4) == -1)
+  if(add_targets(4) == -1)
     set_game_state(FAIL);
+  activate_targets();
   PTR tar;
 
   unsigned long long time;
+  int dt;
 
   while (game_state() != ENDGAME) {
     if (SDL_GetTicks() - time > (1000 / refresh_rate)){
       // printf("%lldms\n",SDL_GetTicks() - time);
+      dt = SDL_GetTicks() - time;
       time = SDL_GetTicks();
 
       if(game_state() != PAUSED_U){
@@ -199,7 +202,89 @@ int main(){
         }
 
         if(*num_targets() == 0)
-          next_lvl();
+          next_lvl();//
+      }
+
+      else if(game_state() == NXT_LVL){
+        transition(dt);
+
+        if(active_missiles > 0){
+          for(int o = 0; o < missiles; o++){
+            if(r[o].active){
+              r[o].y -= rocket_speed;
+              if(r[o].y < -bullet_size){
+                r[o].active = 0;
+                active_missiles--;
+              }
+            }
+          }
+        }
+
+        tar = head_target();
+        while(tar != NULL && game_state() != DEAD){
+          switch(tar->ball.active){
+            case 0:
+              dummy();
+              double dy = fabs(tar->ball.y - ship->y + 16);
+              if(dy < 50){
+                double dx = fabs(tar->ball.x - ship->x);
+                if(dx < 80){
+                  if(hypot(dx - 56.5, dy) + hypot(dx + 56.5, dy) < 162){
+                    tar->ball.active = -10;
+                    ship->life--;
+                    if(!ship->life){
+                      set_game_state(DEAD);
+                      ship->life = -60;
+                      if(active_missiles > 0){
+                        for(int o = 0; o < missiles; o++){
+                          r[o].active = 0;
+                        }
+                        active_missiles = 0;
+                      }
+                      PTR temp = head_target(); // new pointer to clear remaining bullets
+                      while(temp != NULL){
+                        if(temp->ball.active < 0)
+                          temp->ball.active = random_value(400,1000);
+                        temp = temp->next;
+                      }
+                    }
+                  }
+                }
+              }
+              if(!(tar->ball.active)){
+                tar->ball.x += bullet_speed * sin(tar->ball.angle);
+                if(tar->ball.x < 0 || tar->ball.x > gfx_screenWidth()){
+                  tar->ball.active = random_value(400,1000);
+                }
+                else{
+                  tar->ball.y += bullet_speed * cos(tar->ball.angle);
+                  if(tar->ball.y > gfx_screenHeight()){
+                    tar->ball.active = random_value(400,1000);
+                  }
+                }
+              }
+              break;
+
+            case 1:
+              tar->ball.x = tar->x;
+              tar->ball.y = tar->y ;
+              double tan = (ship->x - tar->x)/(ship->y - 16 - tar->y);
+              tar->ball.angle = atan(tan);
+              tar->ball.active--;
+              break;
+
+            case -1:
+              tar->ball.active = random_value(400,1000);
+              break;
+
+            default:
+              if(tar->state != OFF)
+                step_to_zero(&(tar->ball.active));
+              break;
+          }
+          tar = tar->next;
+        }
+
       }
 
       else if(game_state() == DEAD){
