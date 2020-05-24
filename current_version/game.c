@@ -7,6 +7,8 @@
 #define UFO_HEIGHT    20
 #define BUFF_SIZE     10
 #define SCORE_SIZE    8
+#define BACK          0
+#define GO            1
 
 typedef struct target* PTR;
 
@@ -14,7 +16,7 @@ FILE* brd_ptr;
 
 void dummy(){}    //do nothing
 
-static struct status gamestat = {ENTRY, 1, 0, 0, 0, 0};
+static struct status gamestat = {ENTRY, 1, 0, 1, 0, 1};
 static char input[BUFF_SIZE];
 static struct s_ship mothership;
 static struct target first;
@@ -139,14 +141,14 @@ void draw_UFO(PTR t){
         int nx = dx * t->ball.active / 1000;
         gfx_line(t->x - nx, t->y, t->x + nx,t->y, ORANGE);
       }
-      else if( !(t->ball.active) )
-        gfx_filledCircle(t->ball.x, t->ball.y, 5, ORANGE);
-      else
-        gfx_filledCircle(t->ball.x, t->ball.y, -(t->ball.active), YELLOW);
     }
     else
       gfx_filledCircle(t->x, t->y, (t->state % 5) * -15 , YELLOW);
   }
+  if( !(t->ball.active) )
+    gfx_filledCircle(t->ball.x, t->ball.y, 5, ORANGE);
+  else
+    gfx_filledCircle(t->ball.x, t->ball.y, -(t->ball.active), YELLOW);
 }
 
 void draw_ship(struct s_ship* ship){
@@ -462,12 +464,8 @@ char game_state(){
 }
 
 void init_target(PTR new){
-  new->state = random_value(R_UP,L_UP);
-  if(new->state < L_DOWN)
-    new->x = -ufo_x();
-  else
-    new->x = gfx_screenWidth() + ufo_x();
-  new->colour = 2 * random_value(0,5) + 1;
+  new->state = OFF;
+  new->colour = 2 * random_value(0,6) + 1;
   new->y = random_value(gfx_screenHeight() / 8, gfx_screenHeight() / 2);
   new->angle = deg_to_rad(random_value_d(10.0, 60.0));
   new->points = (char)random_value(1,10);
@@ -476,30 +474,38 @@ void init_target(PTR new){
 }
 
 int add_targets(int amount){
-  int num = 1;
-  PTR f = head_target();
-  while(f->next != NULL){
-    num++;
-    f = f->next;
-  }
-  if(num == 1)  num = 0;
-  gamestat.active_targets = num + amount;
-  while(++num < gamestat.active_targets){
-    f->next = malloc(sizeof(*f));
-    if(f->next == NULL)
-      return -1;
-    else{
+  if(amount > 0){
+    int num = 1;
+    PTR f = head_target();
+    while(f->next != NULL){
+      init_target(f);
+      num++;
       f = f->next;
     }
+    gamestat.active_targets = num + amount;
+    while(num++ < gamestat.active_targets){
+      f->next = malloc(sizeof(*f));
+      if(f->next == NULL)
+        return -1;
+      else{
+        init_target(f);
+        f = f->next;
+      }
+    }
+    f->next = NULL;
+    return 1;
   }
-  f->next = NULL;
-  return 1;
+  return 0;
 }
 
 void activate_targets(){
   PTR f = head_target();
   while(f != NULL){
-    init_target(f);
+    f->state = random_value(R_UP,L_UP);
+    if(f->state < L_DOWN)
+      f->x = -ufo_x();
+    else
+      f->x = gfx_screenWidth() + ufo_x();
     f = f->next;
   }
 }

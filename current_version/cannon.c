@@ -188,7 +188,7 @@ int main(){
               break;
 
             default:
-              if(tar->state != OFF)
+              if(tar->state != OFF || tar->ball.active < 0)
                 step_to_zero(&(tar->ball.active));
               break;
           }
@@ -204,7 +204,7 @@ int main(){
         if(*num_targets() == 0)
           next_lvl();//
       }
-
+// 
       else if(game_state() == NXT_LVL){
         transition(dt);
 
@@ -222,9 +222,7 @@ int main(){
 
         tar = head_target();
         while(tar != NULL && game_state() != DEAD){
-          switch(tar->ball.active){
-            case 0:
-              dummy();
+          if(!(tar->ball.active)){
               double dy = fabs(tar->ball.y - ship->y + 16);
               if(dy < 50){
                 double dx = fabs(tar->ball.x - ship->x);
@@ -263,24 +261,12 @@ int main(){
                   }
                 }
               }
-              break;
 
-            case 1:
-              tar->ball.x = tar->x;
-              tar->ball.y = tar->y ;
-              double tan = (ship->x - tar->x)/(ship->y - 16 - tar->y);
-              tar->ball.angle = atan(tan);
-              tar->ball.active--;
-              break;
-
-            case -1:
+          }
+          else if(tar->ball.active < 0){
+            step_to_zero(&(tar->ball.active));
+            if(tar->ball.active == -1)
               tar->ball.active = random_value(400,1000);
-              break;
-
-            default:
-              if(tar->state != OFF)
-                step_to_zero(&(tar->ball.active));
-              break;
           }
           tar = tar->next;
         }
