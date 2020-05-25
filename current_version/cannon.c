@@ -153,7 +153,7 @@ int main(){
                       }
                       PTR temp = head_target(); // new pointer to clear remaining bullets
                       while(temp != NULL){
-                        if(temp->ball.active < 0)
+                        if(temp->ball.active <= 0)
                           temp->ball.active = random_value(400,1000);
                         temp = temp->next;
                       }

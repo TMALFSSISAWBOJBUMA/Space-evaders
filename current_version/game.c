@@ -441,10 +441,15 @@ char keyboard_actions(){
     case DEAD:
       switch(key){
         case SDLK_RETURN:  //ENTER
+          save_score();
           set_game_state(ENTRY);
+          gamestat.lvl = 1;
           mothership.x = gfx_screenWidth() / 2;
           mothership.life = 5;
-          save_score();
+          del_targets();
+          if(add_targets(3) == -1)
+            set_game_state(FAIL);
+          activate_targets();
           break;
 
         case SDLK_ESCAPE:
@@ -535,11 +540,13 @@ char* num_targets(){
 void del_targets(){
   PTR f = head_target();
   PTR b = f->next;
+  f->next = NULL;
   while(b){
     f = b;
     b = f->next;
     free(f);
   }
+  gamestat.active_targets = -1;
 }
 
 void set_game_state(enum level k){
