@@ -1,5 +1,5 @@
 enum dir {OFF, R_UP, R_DOWN, L_DOWN, L_UP};      //target's state
-enum level {ENTRY, NXT_LVL, GAME, DEAD, PAUSED, PAUSED_U, FAIL, ENDGAME};    //stages of the game
+enum level {ENTRY, NXT_LVL, GAME, DEAD, PAUSED, PAUSED_U, FAIL, ENDGAME, PREVIOUS};    //stages of the game
 enum to_do {NTHG, MOV_L, MOV_R, SHOOT = 4};     //keyboard_actions() output
 enum alignment {LEFT, CENTRE, RIGHT};
 
@@ -36,10 +36,12 @@ struct s_ship{
 
 struct status{
   unsigned int game_enum  :4;
-  unsigned int refresh  :8;
+  unsigned int prev_game_enum :4;
+  unsigned int refresh    :8;
   unsigned int user_score :20;
-  unsigned int lvl :8;
-  unsigned int progress: 12;
+  unsigned int diff_score :1;
+  unsigned int lvl        :8;
+  unsigned int progress   :12;
   char active_targets;
 };
 

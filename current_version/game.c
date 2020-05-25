@@ -16,7 +16,7 @@ FILE* brd_ptr;
 
 void dummy(){}    //do nothing
 
-static struct status gamestat = {ENTRY, 1, 0, 1, 0, 1};
+static struct status gamestat = {ENTRY, 1, 1, 0, 1, 1, 0, -1};
 static char input[BUFF_SIZE];
 static struct s_ship mothership;
 static struct target first;
@@ -46,7 +46,7 @@ void print_scores(){
   int pos = 0;
   char text[30];
   while(pos < SCORE_SIZE){
-    if(us[pos].name[0] != 0){
+    if(us[pos].name[0] != '0'){
       sprintf(text,"%d.%10s %u", pos + 1, &(us[pos].name[0]), us[pos].scores);
       text_align(text, LEFT, -260 + 20 * pos, WHITE, 255);
     }
@@ -55,16 +55,19 @@ void print_scores(){
 }
 
 void update_scorebrd(){
-  int pos = 0;
-  while(us[pos].scores > gamestat.user_score)
-    pos++;
-  if(pos < SCORE_SIZE){
-    for(int i = SCORE_SIZE - 1; i > pos; i--){
-      strcpy(&(us[i].name[0]), &(us[i-1].name[0]));
-      us[i].scores = us[i-1].scores;
+  if(gamestat.diff_score){
+    int pos = 0;
+    while(us[pos].scores > gamestat.user_score)
+      pos++;
+    if(pos < SCORE_SIZE){
+      for(int i = SCORE_SIZE - 1; i > pos; i--){
+        strcpy(&(us[i].name[0]), &(us[i-1].name[0]));
+        us[i].scores = us[i-1].scores;
+      }
+      us[pos].scores = gamestat.user_score;
+      strcpy(&(us[pos].name[0]), input_string());
     }
-    us[pos].scores = gamestat.user_score;
-    strcpy(&(us[pos].name[0]), input_string());
+    gamestat.diff_score = 0;
   }
 }
 
@@ -147,7 +150,7 @@ void draw_UFO(PTR t){
   }
   if( !(t->ball.active) )
     gfx_filledCircle(t->ball.x, t->ball.y, 5, ORANGE);
-  else
+  else if(t->ball.active < 0)
     gfx_filledCircle(t->ball.x, t->ball.y, -(t->ball.active), YELLOW);
 }
 
@@ -340,6 +343,7 @@ void target_action(PTR t){
 
 void add_to_score(int x){
   gamestat.user_score += x;
+  gamestat.diff_score = 1;
 }
 
 int score(){
@@ -400,7 +404,7 @@ char keyboard_actions(){
       switch(key){
 
         case SDLK_SPACE:
-          set_game_state(GAME);
+          set_game_state(PREVIOUS);
           break;
 
         case SDLK_ESCAPE:
@@ -477,19 +481,24 @@ int add_targets(int amount){
   if(amount > 0){
     int num = 1;
     PTR f = head_target();
+    init_target(f);
     while(f->next != NULL){
       init_target(f);
       num++;
       f = f->next;
     }
-    gamestat.active_targets = num + amount;
-    while(num++ < gamestat.active_targets){
+    if(gamestat.active_targets == -1)
+      gamestat.active_targets = amount;
+    else
+      gamestat.active_targets = num + amount;
+
+    while(++num <= gamestat.active_targets){
       f->next = malloc(sizeof(*f));
       if(f->next == NULL)
         return -1;
       else{
-        init_target(f);
         f = f->next;
+        init_target(f);
       }
     }
     f->next = NULL;
@@ -536,14 +545,18 @@ void del_targets(){
 void set_game_state(enum level k){
   if(k == NXT_LVL)
     gamestat.progress = 3999;
+  else if(k == PAUSED)
+    gamestat.prev_game_enum = gamestat.game_enum;
+  else if(k == PREVIOUS)
+    k = gamestat.prev_game_enum;
   gamestat.game_enum = k;
 }
 
 void next_lvl(){
-  gamestat.lvl ++;
   set_game_state(NXT_LVL);
   if(add_targets(gamestat.lvl) == -1)
-    gamestat.game_enum = FAIL;
+    set_game_state(FAIL);
+  gamestat.lvl ++;
 }
 
 void set_refresh_rate(int r){

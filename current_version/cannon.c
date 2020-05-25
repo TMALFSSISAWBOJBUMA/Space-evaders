@@ -47,7 +47,7 @@ int main(){
   cannon_speed /= refresh_rate;
   bullet_speed /= refresh_rate;
 
-  if(add_targets(4) == -1)
+  if(add_targets(3) == -1)
     set_game_state(FAIL);
   activate_targets();
   PTR tar;
@@ -204,7 +204,7 @@ int main(){
         if(*num_targets() == 0)
           next_lvl();//
       }
-// 
+//
       else if(game_state() == NXT_LVL){
         transition(dt);
 
