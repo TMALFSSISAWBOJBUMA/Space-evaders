@@ -27,9 +27,8 @@ int main(){
   const int missiles = 3;
   int active_missiles = 0;
   struct rocket r[missiles];
-  for(int n = 0; n < missiles; n++){
+  for(int n = 0; n < missiles; n++)
     r[n].active = 0;
-  }
 
 
   int bullet_size = 8;
