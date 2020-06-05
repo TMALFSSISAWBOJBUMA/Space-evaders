@@ -32,10 +32,10 @@ void read_scores(){
     char buff[16];
     while(pos < SCORE_SIZE){
       if(fgets(buff ,16, brd_ptr) != NULL)
-        sscanf(buff,"%s\t%u\n", &(us[pos].name[0]), &(us[pos].scores));
+        sscanf(buff, "%s\t%u\n", &(us[pos].name[0]), &(us[pos].scores));
       else{
         sprintf(buff, "%s\t%u\n", "0", 0);
-        sscanf(buff,"%s\t%u\n", &(us[pos].name[0]), &(us[pos].scores));
+        sscanf(buff, "%s\t%u\n", &(us[pos].name[0]), &(us[pos].scores));
       }
       pos++;
     }
@@ -83,7 +83,7 @@ void save_score(){
     update_scorebrd();
     int pos = -1;
     while(++pos < SCORE_SIZE)
-      fprintf(brd_ptr,"%s\t%u\n", &(us[pos].name[0]), us[pos].scores);
+      fprintf(brd_ptr, "%s\t%u\n", &(us[pos].name[0]), us[pos].scores);
     fclose(brd_ptr);
   }
   gamestat.user_score = 0;
